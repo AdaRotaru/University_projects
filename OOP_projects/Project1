@@ -1,0 +1,551 @@
+#include <stdio.h>
+#include <cstring>
+#include <cassert>
+#define MIN_INT 999999999
+#define MAX_INT -999999999
+#include <iostream>
+using namespace std;
+ 
+#pragma region Lista
+ 
+class  Nod{
+    int info;
+    Nod* next;
+public:
+    Nod(); //constructorul fara parametri
+    Nod(int x); 
+    Nod(int i, Nod* n); //constructor de copiere
+    void setInfo(int x); //seteaza valoarea unui nod
+    int getInfo(); //returneaza informatia dintr-un nod
+    void setNext(Nod &);  
+    Nod* getNext(); //returneaza nodul urmator
+    ~Nod(); 
+    };
+Nod::Nod()
+{
+    info = 0;
+    next = NULL;
+}
+Nod::Nod(int x)
+{
+    info = x;
+    next = NULL;
+}
+ 
+Nod::Nod(int i, Nod* n)
+{
+    info = i;
+    next = n;
+}
+ 
+Nod::~Nod()
+{
+   // delete next;
+}
+ 
+void Nod::setInfo(int x)
+{
+    info = x;
+}
+ 
+int Nod::getInfo()
+{
+    return info;
+}
+ 
+void Nod::setNext(Nod &p)
+{
+    next = &p;
+}
+ 
+Nod* Nod::getNext()
+{
+    return next;
+}
+ 
+class Lista{
+    private:
+        Nod* start, *endd; //retin primul si ultimul nod al listei
+        int Size; //retine lungimea listei
+    public:
+        Lista();
+        Lista(int x); 
+        Lista(Lista &l); //constructorul de copiere
+        void Insert(int x); //insereaza un nod cu valoarea x la sfarsitul listei
+        void InsertAt(int x, int pos); 
+        int get(int i) const; 
+        int length(); //returneaza lungimea(Size ul) listei
+        void Remove(int i); //sterge nodul de pe pozitia i
+        void Clear();
+        void FunnyClear(int k);
+        bool has(int x); //testeaza daca exista valoarea x in lista
+        int Min(); 
+        int Max(); 
+        int suma() const; //returneaza suma elementelor din lista
+        Lista Reverse();
+        Lista ReverseLinks();
+        void print(); //afiseaza elementele listei
+        Lista operator*(int n); 
+        bool operator<(const Lista &L1); 
+        bool operator>(const Lista &L2); 
+        Lista operator+(const Lista &L1); 
+        int operator[](int i);
+        void operator=(const Lista &l); //supraincarcarea operatorului = (atribuire)
+        friend ostream &operator<<( ostream &output, const Lista &l ); //supraincarcarea operatorului de afisare
+        friend istream &operator>>( istream  &input, Lista &l ); //supraincarcarea operatorului de citire
+        ~Lista(){}; //destructorul listei
+};
+Lista::Lista()
+{
+    start = endd = NULL;
+    Size = 0;
+}
+ 
+Lista::Lista(int x)
+{
+    start = new Nod;
+    start->setInfo(x);
+    endd = start;
+    Size = 1;
+}
+ 
+Lista::Lista(Lista& l)
+{
+    start = endd = NULL;
+    Size = 0;
+    Nod* p = l.start;
+    while (p != NULL)
+    {
+        Insert(p->getInfo());
+        p = p->getNext();
+    }
+}
+ 
+void Lista::print() {
+    Nod *p = start;
+    while (p != NULL) {
+        cout << p->getInfo() << " ";
+        p = p->getNext();
+    }
+    cout <<endl;
+}  //se parcurge lista si se afiseaza pe rand informatia din fiecare nod
+ 
+void Lista::Insert(int x)
+{
+    Nod *p;
+    p = new Nod;
+    p->setInfo(x);
+    if(start == NULL)
+    {
+        start = p;
+        endd = p;
+    }   //cazul in care lista este vida
+    else{
+        endd->setNext(*p);
+        endd = p;
+        endd->setNext(*start);
+    }
+    ++Size;
+}
+ 
+void Lista::InsertAt(int x, int pos) // 1 5  -obiectnou-   7 --- insertat(75,2)   //  1 5 75 7
+{
+    Nod *p;
+    p = new Nod;
+    p->setInfo(x);
+    if(start == NULL) //cazul in care lista este vida
+    {
+        start = p;
+        endd = p;
+    }
+    else{
+        if ( pos == 0 ){
+            p->setNext(*start);
+            start = p;
+            endd->setNext(*start);
+        }else{
+            Nod *current;
+            current = start;
+            for ( int i = 0; i < pos-1; i++ ){
+                current = current->getNext();
+            }
+            p->setNext( *(current->getNext()) );
+            current->setNext( *p );
+        }
+ 
+        // endd->setNext(*p);
+        // endd = p;
+        // endd->setNext(*start);
+    }
+    ++Size;
+}
+ 
+void Lista::Remove(int i)
+{
+    if(start == NULL)
+        return; //lista vida
+    if(i < 0 || i >= Size)
+        return; //pozitie incorecta
+    if(i == 0){
+        if(Size < 2){
+            delete start;
+            start = endd = NULL;
+        }
+        else{
+            Nod *p = start;
+            start = start->getNext();
+            delete p;
+            endd->setNext(*start);
+        }
+        --Size;
+    }
+    else if(i == Size - 1){
+        Nod *p = start;
+        delete endd;
+        for(int j = 0; j < Size - 2; j++ )
+            p = p->getNext();
+        endd = p;
+        endd->setNext(*start);
+        --Size;
+    }
+    else{
+        int j = 0;
+        Nod * p = start, *q;
+        for(; p != NULL && j < i; p = p->getNext(), j++)
+            q = p;
+        if (i == j)
+        {
+            Nod *r = p->getNext();
+            q->setNext(*r);
+            delete p;
+        }
+        --Size;
+    }
+}
+ 
+void Lista::Clear()
+{
+   start=endd=NULL;
+   Size=0;
+}
+ 
+void Lista::FunnyClear(int k){
+    int current = 0;
+    while ( Size > 0 ){
+        cout << get(current) << " ";
+        Remove(current);
+        if ( Size ) {
+            current += k - 1;
+            current = current % Size;
+        }
+    }
+    cout << endl;
+}
+ 
+bool Lista::has(int x)
+{
+    Nod *p = start;
+    for (int i = 0; i < Size; i++)
+    {
+        if (p->getInfo() == x)
+            return true;
+        p = p->getNext();
+    } //se parcurege lista si se cauta elementul x;
+    return false;
+}
+ 
+int Lista::length()
+{
+    return Size;
+}
+ 
+Lista Lista::Reverse()
+{
+    Lista L;
+    int i;
+    for(i = Size - 1; i >= 0; i--)
+        L.Insert(get(i));
+    return L;
+}
+ 
+Lista Lista::ReverseLinks()
+{
+    Lista L;
+    int i;
+    L.InsertAt(get(0),0);
+    for(i = Size - 1; i > 0; i--)
+        L.Insert(get(i));
+    return L;
+}
+ 
+int Lista::get(int i) const
+{
+    Nod *p = start;
+    if (i < 0 && i > Size)
+        return MAX_INT; //pozitie incorecta data
+    if (p != NULL)
+        for(int j = 0; j < i; j++)
+        {
+            p = p->getNext();
+        }
+    return p->getInfo();
+}
+ 
+int Lista::Min()
+{
+    int minim = MIN_INT;
+    for(int i = 0; i < Size; i++)
+        if(get(i) < minim)
+          minim = get(i);
+    return minim;
+}
+ 
+int Lista::Max()
+{
+    int maxim = MAX_INT;
+    for(int i = 0; i < Size; i++)
+        if(get(i) > maxim)
+          maxim = get(i);
+    return maxim;
+ 
+}
+ 
+int Lista::suma() const
+{
+    int s = 0;
+    Nod * p = start;
+    for(int i = 0; i < Size; i++)
+    {
+        s = s + p->getInfo();
+        p = p->getNext();
+    }
+    return s;
+}
+ 
+Lista Lista::operator*(int n)
+{
+    Lista l;
+    Nod *p = this->start;
+    for(int i = 0; i < this->Size; i++)
+    {
+        l.Insert(p->getInfo() * n);
+        p = p->getNext();
+    }
+    return l;
+}
+ 
+bool Lista::operator<(const Lista &L1)
+{
+    if (L1.suma() > this->suma())
+        return true;
+    return false;
+}
+ 
+bool Lista::operator>(const Lista &L1)
+{
+    if (L1.suma() < this->suma())
+        return true;
+    return false;
+}
+ 
+Lista Lista::operator+(const Lista &L1)
+{
+    Lista L;
+    for(int i = 0; i < this->Size; i++)
+    {
+        int x = this->get(i);
+        L.Insert(x);
+    }
+    for(int i = 0; i < L1.Size; i++)
+    {
+        int x = L1.get(i);
+        L.Insert(x);
+    }
+    return L;
+}
+ 
+int Lista::operator[](int i)
+{
+    if (i >= Size)
+        return 0;
+    return get(i);
+}
+ 
+void Lista::operator=(const Lista &l)
+{
+    Nod *p = this->start;
+    if(this->Size != 0)
+    {
+        Nod *q;
+        for(int i = 0; i < this->Size; i++)
+        {
+            q = p->getNext();
+            delete p;
+            p = q;
+        }
+        delete q;
+    }
+    this->start = this->endd = NULL;
+    this->Size = 0;
+    p = l.start;
+    for(int i = 0; i < l.Size; i++)
+    {
+        this->Insert(p->getInfo());
+        p = p->getNext();
+    }
+}
+ostream &operator<<( ostream &output, const Lista &l )
+{
+ 
+    Nod *p = l.start;
+    for (int i = 0; i < l.Size; i++)
+    {
+        cout<<p->getInfo()<<" ";
+        p = p->getNext();
+    }
+    return output;
+}
+ 
+istream &operator>>( istream  &input, Lista &l )
+{
+    int x;
+    input >> l.Size;
+ 
+ 
+    Nod *nodStart = new Nod;
+    cin>>x;
+    nodStart->setInfo(x);
+    l.start = nodStart;
+ 
+    Nod * last = l.start;
+ 
+ 
+    for(int i = 1; i < l.Size; i++)
+    {
+        Nod *p = new Nod;
+        last->setNext(*p);
+        cin>>x;
+        p->setInfo(x);
+        last = p;
+ 
+ 
+        //p->getNext();
+    }
+    l.endd = last;
+    l.endd->setNext(*l.start);
+    return input;
+}
+ 
+#pragma endregion Lista
+ 
+void menu_output()
+{
+    printf("\n Rotaru Ada 212 proiect 4 Liste circulare : \n");
+    printf("\n\t MENIU:");
+    printf("\n===========================================\n");
+    printf("\n");
+    printf("1. Adauga in lista pe o anumita pozitie"); printf("\n");
+    printf("2. Sterge un element de pe o pozitie"); printf("\n");
+    printf("3. Inverseaza legaturile"); printf("\n");
+    printf("4. Golirea listei din K in K"); printf("\n");
+    printf("5. Concatenarea a doua liste"); printf("\n");
+    printf("0. Iesire."); printf("\n");
+}
+void menu()
+{
+    Lista L;
+ 
+    int option;///optiunea aleasa din meniu
+    option=0;
+   
+   
+    for ( int i = 0; i < 10; i++ )
+        L.Insert(i+1);
+    cout << L << endl;
+ 
+/*
+    Lista nuevo;
+    cin >> nuevo;
+    cout << nuevo;
+*/
+    //return;
+    /*
+    Lista a;
+    a = L.ReverseLinks();
+    cout << a << endl;
+   
+    return;
+    */
+ 
+    do
+    {
+        menu_output();
+ 
+        printf("\nIntroduceti numarul actiunii: ");
+        scanf("%d", &option);
+ 
+        if (option==1)
+        {
+            int temp, pos;
+            cout << "Introduceti un numar de adaugat in lista: ";
+            cin >> temp;
+            cout << "Introduceti pozitia: ";
+            cin >> pos;
+            L.InsertAt(temp,pos);
+            cout << endl;
+            cout << L << endl;
+        }
+        if (option==2)
+        {
+            cout << "Alegeti pozitia de pe care sa stergeti elementul: ";
+            int temp;
+            cin >> temp;
+            L.Remove(temp);
+            cout << L << endl;
+        }
+        if (option==3)
+        {
+            Lista temp;
+            temp = L.ReverseLinks();
+            L.Clear();
+            L = temp;
+            cout << L << endl;
+        }
+        if (option==4)
+        {
+           cout << "Introduceti pasul k : ";
+           int k;
+           cin >> k;
+           L.FunnyClear(k);
+           cout << endl;
+        }
+        if (option==5)
+        {
+            Lista nuevoLista;
+            cout << "Introduceti o noua lista: ";
+            cin >> nuevoLista;
+            Lista concat;
+            concat  = L + nuevoLista;
+            L.Clear();
+            L = concat;
+            cout << L << endl;
+        }
+        if (option==0)
+        {
+            printf("\nEXIT!\n");
+        }
+        if (option<0||option>5)
+        {
+            printf("\nSelectie invalida\n");
+        }
+        printf("\n");
+        //system("pause"); ///Pauza - Press any key to continue...
+        //system("cls");   ///Sterge continutul curent al consolei
+    }
+    while(option!=0);
+}
+int main()
+{
+    menu();
+    return 0;
+}
