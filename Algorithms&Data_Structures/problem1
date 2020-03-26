@@ -194,5 +194,5 @@ class Problem1(Problem):
             queue.afisare()
             solutie += "\nElementele cozii sunt:\n" + str(queue.v)
             stack2.afisare()
-            solutie += "\nElementele stivei 2 sunt:\n" + str(stack2.v)
+            solutie += "\nElementele stivei  2 sunt:\n" + str(stack2.v)
             return solutie
