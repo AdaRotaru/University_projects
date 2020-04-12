@@ -1,0 +1,606 @@
+#include <iostream>
+#include <stdlib.h>
+using namespace std;
+class Card
+{
+protected:
+    string nrCard;
+    string numeDetinator;
+    string data_expirare;
+    int CVV;
+    double credit;
+public:
+    Card (string, string, string, int, double);
+    virtual ~Card(); ///destructor virtual
+    Card(Card &x);
+    virtual void citire(istream &in);
+    virtual void afisare(ostream &out);
+    friend istream& operator>>(istream&, Card&);
+    friend ostream& operator<<(ostream&, Card&);
+    Card& operator= (const Card&);
+    static int n;
+    static void nr_ob()  /// metoda statica de afisare a numarului de obiecte
+    {
+        cout<<n;
+    }
+    double get_credit() {return credit;}
+};
+
+int Card::n=0; ///declaram variabila
+Card::Card (string nr="",string nume="", string data="", int cvv=0, double cred=0)
+{
+    n++; ///incrementam in constructor
+
+    nrCard = nr;
+    numeDetinator = nume;
+    data_expirare = data;
+    CVV = cvv;
+    credit = cred;
+}
+Card::~Card()
+{
+}
+void Card::citire(istream &in)
+{
+    string x;
+    cout<<"Numar card (16 cifre): ";
+    in>>x;
+    getline(in, x);
+    try
+    {
+        for (unsigned int i=0; i<x.length(); i++)
+            if (x[i]<'0'||x[i]>'9')
+                throw 1;
+    }
+    catch(int i)
+    {
+
+        if( i==2)
+    {
+        cout<<"Eroare constructor, numarul de card trebuie sa aiba 16 cifre!\n";
+        exit(EXIT_FAILURE);
+    }
+    else
+        cout<<"Eroare constructor, numarul cardului poate contine doar cifre.\n";
+        exit(EXIT_FAILURE);
+    }
+    nrCard=x;
+
+    cout<<"Nume detinator card:";
+    in.get();
+    string z;
+    getline(in,z); ///citire string pana la enter (permite sa avem spatii)
+    try
+    {
+        if(z.length() == 0)
+            throw 1;
+        for(int c = 0; c<z.length(); c++)
+
+            if(z[c] > 'z' && z[c] != ' ')
+                throw 2;
+            else if(z[c] > 'Z' && z[c] < 'a' && z[c] != ' ')
+                throw 2;
+            else if(z[c] < 'A' && z[c] != ' ')
+                throw 2;
+
+
+    }
+    catch(int i)
+    {
+        if(i == 1)
+        {
+            cout<<"Eroare constructor, numele nu poate fi necompletat!\n";
+            exit(EXIT_FAILURE);
+        }
+        if(i == 2)
+        {
+            cout<<"Eroare constructor, numele trebuie sa contina doar litere!\n";
+            exit(EXIT_FAILURE);
+        }
+
+    }
+    numeDetinator=z;
+
+    cout<<"Data de expirare ('Luna/An'): ";
+    getline(in, z);
+    try
+    {
+
+        if(z.length() != 5 || z[2] != '/')
+            throw 1;
+        if(z[0] < '0' || z[0] > '1' || z[1] < '0')
+            throw 2;
+        else if(z[0] == '1')
+            if(z[1] > '2')
+                throw 2;
+
+
+    }
+    catch(int i)
+    {
+        if(i == 1)
+        {
+            cout<<"Eroare constructor, data de expirare trebuie sa aiba formatul 'LL/AA'! \n";
+            exit(EXIT_FAILURE);
+        }
+        if(i == 2)
+        {
+            cout<<"Eroare constructor, introduceti o luna valida! \n";
+            exit(EXIT_FAILURE);
+        }
+    }
+    data_expirare = z;
+
+    cout<<"CVV (3 cifre): ";
+    int cvv;
+    in>>cvv;
+    try
+    {
+        if (cvv>999 || cvv <100)
+            throw 1;
+    }
+    catch(int i)
+    {
+        cout<<"Eroare constructor, CVV-ul trebuie sa contina exact 3 cifre.\n";
+        exit(EXIT_FAILURE);
+    }
+    CVV=cvv;
+
+    cout<<"Credit: ";
+    double cred;
+    in>>cred;
+    in.get();
+    credit=cred;
+
+}
+void Card::afisare(ostream &out)
+{
+    cout<<endl;
+    out<<"Numar card: "<<nrCard<<endl;
+    out<<"Nume proprietar card: "<<numeDetinator<<endl;
+    out<<"Data expirare: "<<data_expirare<<endl;
+    out<<"CVV: "<<CVV<<endl;
+    out<<"Credit: "<<credit<<endl;
+}
+istream& operator>>(istream& in,Card& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, Card& p)
+{
+    p.afisare(out);
+    return out;
+}
+Card& Card::operator= (const Card &p)
+{
+    this->credit=p.credit;
+    this->CVV=p.CVV;
+    this->data_expirare=p.data_expirare;
+    this->nrCard=p.nrCard;
+    this->numeDetinator=p.numeDetinator;
+    return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Standard:public Card
+{
+protected:
+    int limitaEx;
+    double comision;
+public:
+    Standard (int, double, string, string, string, int, double);
+    virtual ~Standard(); ///destructor virtual
+    Standard(Standard& x);
+
+    virtual void citire(istream &in);
+    virtual void afisare(ostream &out);
+
+    friend istream& operator>>(istream&, Standard&);
+    friend ostream& operator<<(ostream&, Standard&);
+    virtual double get_comision()
+    {
+        return comision;
+    }
+
+    virtual double get_limita()
+    {
+        return limitaEx;
+    }
+    Standard& operator=(const Standard& z);
+
+    virtual void retragere(double suma);
+
+
+};
+
+Standard::Standard(int limita = 0, double com = 0.0, string nr = "", string nume = "", string data = "", int cvv = 0, double cred = 0.0):Card(nr, nume, data, cvv, cred)
+{
+    limitaEx = limita;
+    comision = com;
+}
+
+Standard::~Standard()
+{
+}
+void Standard::retragere(double suma)
+{
+    double a = comision/100 * suma;
+
+    if(suma > credit)
+    {
+        cout<<"Credit insuficient!\n";
+        return;
+    }
+
+    cout<<"S-a extras suma de "<<suma<<" lei";
+    if(suma > limitaEx)
+    {
+        credit -= (suma+a);
+        cout<<" comision conform contractului  "<<a;
+    }
+    else if(suma <= limitaEx)
+        credit -= suma;
+    cout<<".\n";
+
+}
+void Standard::citire(istream& in)
+{
+    Card::citire(in);
+    int limita;
+    cout<<"Limita de extragere: ";
+    in>>limita;
+    try
+    {
+        if(limita < 0)
+            throw 1;
+
+    }
+    catch(int i)
+    {
+        cout<<"Eroare constructor, limita nu poate fi negativa!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    in.get();
+
+}
+void Standard::afisare(ostream& out)
+{
+    Card::afisare(out);
+
+    out<<"Limita de extragere: "<<limitaEx<<endl;
+    out<<"Comision depasire limita: "<<comision<<endl;
+
+}
+
+istream& operator>>(istream& in, Standard& p)
+{
+    p.citire(in);
+    return in;
+
+}
+
+ostream& operator<<(ostream& out, Standard& p)
+{
+    p.afisare(out);
+    return out;
+
+}
+Standard& Standard::operator= (const Standard &a)
+{
+    Card::operator= (a);
+    this->limitaEx=a.limitaEx;
+    this->comision=a.comision;
+    return *this;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Premium:public Standard
+{
+private:
+    double cashback;
+public:
+    Premium(double, int, double, string, string, string, int, double);
+    Premium(Premium& x);
+    ~Premium();
+
+    void citire(istream& in);
+    void afisare(ostream& out);
+
+    double get_cashback()
+    {
+        return cashback;
+    }
+    friend istream& operator >> (istream&, Premium&);
+    friend ostream& operator <<(ostream&, Premium&);
+
+    Premium& operator=(const Premium& z);
+
+    void retragere(double suma);
+
+
+
+};
+Premium::Premium(double cash = 0.0, int limita = 0, double com = 0.0, string nr = "", string nume = "", string data = "", int cvv = 0, double cred = 0.0):Standard(limita, com, nr, nume, data, cvv, cred)
+{
+    cashback = cash;
+}
+Premium::~Premium()
+{
+}
+void Premium::retragere(double suma)
+{
+    double a = comision/100 * suma, b = cashback/100 * suma;
+
+    if(suma > credit)
+    {
+        cout<<"credit insuficient!\n";
+        return;
+    }
+    cout<<"S-a extras suma de "<<suma<<" lei";
+    if(suma > limitaEx)
+    {
+        credit -= (suma + a);
+        cout<<" comision conform contractului "<<a;
+    }
+    else if(suma <= limitaEx)
+        credit -= suma;
+
+    cout<<" cash_bac conform contractului: "<<b<<".\n";
+
+    credit += b;
+
+}
+void Premium::citire(istream& in)
+{
+    Standard::citire(in);
+
+    cout<<"Cashback: ";
+    in>>cashback;
+    in.get();
+
+
+}
+void Premium::afisare(ostream& out)
+{
+    Standard::afisare(out);
+
+    cout<<"Cashback: "<<cashback<<endl;
+
+}
+istream& operator>>(istream& in, Premium& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, Premium& p)
+{
+    p.afisare(out);
+    return out;
+}
+Premium& Premium::operator= (const Premium &c)
+{
+    Standard::operator= (c);
+    this->cashback=c.cashback;
+    return *this;
+}
+
+
+
+
+void tipul_cardului(Card *&p, int &i)
+{
+    string s;
+    cout<<"\n";
+    cout<<"Introduceti tipu cardului "<<i+1<<": ";
+    cin>>s;
+    try
+    {
+        if(s=="standard")
+        {
+            cin.get();
+            p=new Standard;
+            cin>>*p;
+            i++;
+
+        }
+        else if(s=="premium")
+        {
+            cin.get();
+            p=new Premium;
+            cin>>*p;
+            i++;
+
+        }
+
+        else
+            throw 10;
+    }
+    catch (bad_alloc var)
+    {
+        cout << "Allocation Failure\n";
+        exit(EXIT_FAILURE);
+    }
+    catch(int j)
+    {
+        cout<<"Tipul cardului este invalid\n ";
+    }
+}
+
+int main()
+{
+    double suma;
+    char ch;
+    Card **v;
+    Premium *p = new Premium[100];
+    Standard *s = new Standard[100];
+    int n = 0;
+
+
+    do
+    {
+        int m;
+        cout<<" \n Rotaru Ada Grupa 212 - Proiect 12 - Nume proiect: Card \n "<<endl;
+        cout<<"\nMENIU: ";
+        cout<<"=============================================================================================================="<<endl;
+        cout<<"1.Cititi carduri\n";
+        cout<<"1.Afisati carduri\n";
+        cout<<"3.Retrageti bani de pe card\n";
+        cout<<"4.Alimentati contul\n";
+        cout<<"5.Afisati numarul total de carduri\n";
+        cout<<"0.Iesire\n\n";
+        cout<<"==============================================================================================================\n\n";
+        cout<<"\nIntroduceti o actiune: ";
+        cin>>m;
+
+        switch(m)
+        {
+        case 1:
+        {
+
+            system("CLS");
+
+
+            cout<<"Cate carduri doriti sa inregistrati?: ";
+            cin>>n;
+
+            try
+            {
+                v=new Card*[n];
+                for(int i=0; i<n;)
+                    tipul_cardului(v[i],i);
+
+            }
+             catch (bad_alloc var)
+             {
+                 cout<<"Numarul introdus trebuie sa fie pozitiv. \n";
+                 exit(EXIT_FAILURE);
+             }
+
+            break;
+        }
+
+
+
+        case 2:
+        {
+
+
+            system("CLS");
+            if(n == 0)
+            {
+                cout<<"Cititi minim un card\n";
+                break;
+            }
+            else
+            {
+                for(int i=0; i<n; i++)
+                    cout<<*v[i];
+            }
+        }
+
+
+        break;
+
+    case 3:
+        {
+            /*system("CLS");
+            if(n == 0)
+            {
+                cout<<"cititi minim un card!\n";
+                break;
+            }
+            int poz;
+            double suma;
+            cout<<"Ce card doriti sa folositi pentru a extrage lei: ";
+            cin>>poz;
+
+            if(poz < 1 || poz > n)
+            {
+                cout<<"Pozitie nevalida!\n";
+                break;
+            }
+
+            if(suma > v[poz-1]->get_credit())
+            {
+                cout<<"\nCredit insuficient!";
+                break;
+            }
+
+            cout<<"\nCe suma doriti sa extrageti: ";
+            cin>>suma;
+            v[poz-1]->retragere(suma);
+            break;*/
+        }
+
+    case 4:
+        {
+            /*system("CLS");
+
+            if(n == 0)
+            {
+                cout<<"Cititi minim un card!\n";
+                break;
+            }
+
+
+            int poz;
+            cout<<"Ce card doriti sa alimentati?\n";
+            cin>>poz;
+            if(poz < 1 || poz > n)
+            {
+                cout<<"Pozitie nevalida!\n";
+                break;
+            }
+            double suma;
+            cout<<"Ce suma vreti sa adaugati?\n";
+            cin>>suma;
+
+
+            v[poz-1]->set_credit(suma);
+
+            cout<<"Suma de "<<suma<<" lei a fost adaugata in cont.\n";
+
+
+
+            break;*/
+        }
+
+
+
+
+    case 5:
+        {
+            cout<<"\n\nNumarul total de obiecte create este "<<Card::n<<"\n\n";
+            break;
+        }
+
+    case 0:
+        {
+
+
+            cout<<endl;
+            cout<<"\tExit"<<endl;
+            return 0;
+        }
+
+    default:
+        cout<<"Alegere nevalida!\n";
+
+
+    }
+
+    cout<<endl<<"Pentru a efectua alta operatie apasati tasta D ";
+    cin>>ch;
+    system("CLS");
+
+}
+while(ch == 'd' || ch == 'D');
+
+return 0;
+}
